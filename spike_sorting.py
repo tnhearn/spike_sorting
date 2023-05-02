@@ -3,29 +3,76 @@ import seaborn as sns
 import numpy as np
 import scipy
 
+# Import PCA feature data from MAT file
+data = scipy.io.loadmat('UCLA_GR.mat')
+label_data = data['cluster_class']
+label_data = np.transpose(label_data)
+label_data = label_data[:,0].astype('int')
 
-# Import spike data from MAT file
-data = scipy.io.loadmat('UCLASpikes.mat')
-spike_data = data['spikes']
-spike_data = np.transpose(spike_data)
-
-# Plot spikes
 plt.figure()
-plt.plot(spike_data)
+plt.plot(label_data[:,1])
 plt.xlabel('Sample')
 plt.ylabel('Amplitude (uV)')
 plt.title('Spikes')
 plt.show()
 
+# Import spike data from MAT file
+data = scipy.io.loadmat('UCLASpikes.mat')
+spike_data = data['spikes']
+spike_data = np.transpose(spike_data)
+spike_time = np.linspace(0,
+                         spike_data.shape[0],
+                         num = spike_data.shape[0])
+
+# Plot spikes
+plt.figure()
+colors = ['blue', 'green', 'red', 'black']
+for count, label in enumerate(label_data):
+    if label == 0:
+        plt.subplot(2, 2, 1)
+        plt.plot(spike_time,
+                 spike_data[:,count],
+                 color = colors[label_data[count]])
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude (uV)')
+        plt.title('Spike Group {}'.format(label))
+    elif label == 1:
+        plt.subplot(2, 2, 2)
+        plt.plot(spike_time,
+                 spike_data[:,count],
+                 color = colors[label_data[count]])
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude (uV)')
+        plt.title('Spike Group {}'.format(label))
+    elif label == 2:
+        plt.subplot(2, 2, 3)
+        plt.plot(spike_time,
+                 spike_data[:,count],
+                 color = colors[label_data[count]])
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude (uV)')
+        plt.title('Spike Group {}'.format(label))
+    elif label == 3:
+        plt.subplot(2, 2, 4)
+        plt.plot(spike_time,
+                 spike_data[:,count],
+                 color = colors[label_data[count]])
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude (uV)')
+        plt.title('Spike Group {}'.format(label))
+plt.show()
+
 # Import PCA feature data from MAT file
-data = scipy.io.loadmat('Simulated Data/EasySim_PCA_Features.mat')
+data = scipy.io.loadmat('UCLA_PCA_Features.mat')
 pca_data = data['X']
 pca_data = np.transpose(pca_data)
 
 # Plot first two PCA features
 plt.figure()
-plt.scatter(pca_data[0,:],
-            pca_data[1,:])
+for plot_num in range(pca_data.shape[1]):
+    plt.scatter(pca_data[0,plot_num],
+                pca_data[1,plot_num],
+                c = colors[label_data[plot_num]])
 plt.xlabel('PC 1')
 plt.ylabel('PC 2')
 plt.title('PCA Features')
