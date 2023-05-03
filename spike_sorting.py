@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import scipy
+import pandas as pd
+from sklearn.cluster import KMeans, OPTICS
 
 # Import PCA feature data from MAT file
 data = scipy.io.loadmat('UCLA_GR.mat')
@@ -9,12 +11,14 @@ label_data = data['cluster_class']
 label_data = np.transpose(label_data)
 label_data = label_data[:,0].astype('int')
 
+for label in np.unique(label_data):
+    print('{} spikes in group {}'.format(np.count_nonzero(label_data == label), label))
+
 plt.figure()
-plt.plot(label_data[:,1])
-plt.xlabel('Sample')
-plt.ylabel('Amplitude (uV)')
-plt.title('Spikes')
-plt.show()
+plt.hist(label_data)
+plt.title('Label Distribution')
+plt.xlabel('Label')
+plt.ylabel('Count')
 
 # Import spike data from MAT file
 data = scipy.io.loadmat('UCLASpikes.mat')
@@ -25,41 +29,16 @@ spike_time = np.linspace(0,
                          num = spike_data.shape[0])
 
 # Plot spikes
-plt.figure()
+plt.figure(figsize=(20,10))
 colors = ['blue', 'green', 'red', 'black']
 for count, label in enumerate(label_data):
-    if label == 0:
-        plt.subplot(2, 2, 1)
-        plt.plot(spike_time,
-                 spike_data[:,count],
-                 color = colors[label_data[count]])
-        plt.xlabel('Sample')
-        plt.ylabel('Amplitude (uV)')
-        plt.title('Spike Group {}'.format(label))
-    elif label == 1:
-        plt.subplot(2, 2, 2)
-        plt.plot(spike_time,
-                 spike_data[:,count],
-                 color = colors[label_data[count]])
-        plt.xlabel('Sample')
-        plt.ylabel('Amplitude (uV)')
-        plt.title('Spike Group {}'.format(label))
-    elif label == 2:
-        plt.subplot(2, 2, 3)
-        plt.plot(spike_time,
-                 spike_data[:,count],
-                 color = colors[label_data[count]])
-        plt.xlabel('Sample')
-        plt.ylabel('Amplitude (uV)')
-        plt.title('Spike Group {}'.format(label))
-    elif label == 3:
-        plt.subplot(2, 2, 4)
-        plt.plot(spike_time,
-                 spike_data[:,count],
-                 color = colors[label_data[count]])
-        plt.xlabel('Sample')
-        plt.ylabel('Amplitude (uV)')
-        plt.title('Spike Group {}'.format(label))
+    plt.subplot(2, 2, label+1)
+    plt.plot(spike_time,
+             spike_data[:,count],
+             color = colors[label_data[count]])
+    plt.xlabel('Sample')
+    plt.ylabel('Amplitude (uV)')
+    plt.title('Spike Group {}'.format(label))
 plt.show()
 
 # Import PCA feature data from MAT file
@@ -69,10 +48,13 @@ pca_data = np.transpose(pca_data)
 
 # Plot first two PCA features
 plt.figure()
-for plot_num in range(pca_data.shape[1]):
-    plt.scatter(pca_data[0,plot_num],
-                pca_data[1,plot_num],
-                c = colors[label_data[plot_num]])
+for count, color in enumerate(colors):
+    plt.scatter(pca_data[0,np.argwhere(label_data==count)],
+                pca_data[1,np.argwhere(label_data==count)],
+                c = color,
+                marker = '.',
+                alpha = 0.5)
+plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
 plt.xlabel('PC 1')
 plt.ylabel('PC 2')
 plt.title('PCA Features')
@@ -110,9 +92,63 @@ wavelet_data = np.transpose(wavelet_data)
 
 # Plot first two Wavelet features
 plt.figure()
-plt.scatter(wavelet_data[0,:],
-            wavelet_data[1,:])
+for count, color in enumerate(colors):
+    plt.scatter(wavelet_data[0,np.argwhere(label_data==count)],
+                wavelet_data[1,np.argwhere(label_data==count)],
+                c = color,
+                marker = '.',
+                alpha = 0.5)
+plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
 plt.xlabel('Wavelet 1')
 plt.ylabel('Wavelet 2')
 plt.title('Wavelet Features')
+plt.show()
+
+# "Spike 4" (value = 3 in labels) is likely noise. 
+# Always on the fringe of other clusters.
+
+# Fit k-means to data
+kmeans = KMeans(n_clusters = len(colors),
+                verbose = 1)
+
+kmeans.fit(np.transpose(pca_data))
+
+labels_kmeans = kmeans.predict(np.transpose(pca_data))
+
+# Plot first two PCA features
+plt.figure()
+for count, color in enumerate(colors):
+    plt.scatter(pca_data[0,np.argwhere(labels_kmeans==count)],
+                pca_data[1,np.argwhere(labels_kmeans==count)],
+                c = color,
+                marker = '.',
+                alpha = 0.5)
+plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
+plt.xlabel('PC 1')
+plt.ylabel('PC 2')
+plt.title('PCA Features - KMeans')
+plt.show()
+
+
+# Fit OPTICS to data
+optics = OPTICS(min_samples=10,
+                min_cluster_size = 100,
+                xi = 0.005)
+
+optics.fit(np.transpose(pca_data))
+
+labels_optics = optics.labels_
+
+# Plot first two PCA features
+plt.figure()
+for count, color in enumerate(colors):
+    plt.scatter(pca_data[0,np.argwhere(labels_optics==count)],
+                pca_data[1,np.argwhere(labels_optics==count)],
+                c = color,
+                marker = '.',
+                alpha = 0.5)
+plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
+plt.xlabel('PC 1')
+plt.ylabel('PC 2')
+plt.title('PCA Features - OPTICS')
 plt.show()
