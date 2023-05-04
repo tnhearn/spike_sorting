@@ -129,6 +129,19 @@ plt.ylabel('PC 2')
 plt.title('PCA Features - KMeans')
 plt.show()
 
+plt.figure()
+for count, color in enumerate(colors):
+    plt.scatter(wavelet_data[0,np.argwhere(labels_kmeans == count)],
+                wavelet_data[1,np.argwhere(labels_kmeans == count)],
+                c = color,
+                marker = '.',
+                alpha = 0.5)
+plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
+plt.xlabel('PC 1')
+plt.ylabel('PC 2')
+plt.title('PCA Features - KMeans')
+plt.show()
+
 
 # Fit GMM to data
 gmm = GaussianMixture(n_components = 4, 
@@ -152,4 +165,18 @@ plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
 plt.xlabel('PC 1')
 plt.ylabel('PC 2')
 plt.title('PCA Features - GMM')
+plt.show()
+
+# Plot first two PCA features
+plt.figure()
+for count, color in enumerate(colors):
+    plt.scatter(wavelet_data[0,np.argwhere(labels_gmm == count)],
+                wavelet_data[1,np.argwhere(labels_gmm == count)],
+                c = color,
+                marker = '.',
+                alpha = 0.5)
+plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
+plt.xlabel('Wavelet 1')
+plt.ylabel('Wavelet 2')
+plt.title('Wavelet Features - GMM')
 plt.show()
