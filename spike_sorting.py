@@ -3,13 +3,14 @@ import seaborn as sns
 import numpy as np
 import scipy
 import pandas as pd
-from sklearn.cluster import KMeans, OPTICS
+from sklearn.cluster import KMeans, DBSCAN
+from sklearn.mixture import GaussianMixture
 
 # Import PCA feature data from MAT file
-data = scipy.io.loadmat('UCLA_GR.mat')
+data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLA_GR.mat')
 label_data = data['cluster_class']
 label_data = np.transpose(label_data)
-label_data = label_data[:,0].astype('int')
+label_data = label_data[0,:].astype('int')
 
 for label in np.unique(label_data):
     print('{} spikes in group {}'.format(np.count_nonzero(label_data == label), label))
@@ -21,7 +22,7 @@ plt.xlabel('Label')
 plt.ylabel('Count')
 
 # Import spike data from MAT file
-data = scipy.io.loadmat('UCLASpikes.mat')
+data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLASpikes.mat')
 spike_data = data['spikes']
 spike_data = np.transpose(spike_data)
 spike_time = np.linspace(0,
@@ -42,7 +43,7 @@ for count, label in enumerate(label_data):
 plt.show()
 
 # Import PCA feature data from MAT file
-data = scipy.io.loadmat('UCLA_PCA_Features.mat')
+data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLA_PCA_Features.mat')
 pca_data = data['X']
 pca_data = np.transpose(pca_data)
 
@@ -86,7 +87,7 @@ for pair in pairs:
     plt.show()
 
 # Import PCA feature data from MAT file
-data = scipy.io.loadmat('UCLA_Wavelet_Features.mat')
+data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLA_Wavelet_Features.mat')
 wavelet_data = data['X']
 wavelet_data = np.transpose(wavelet_data)
 
@@ -108,8 +109,7 @@ plt.show()
 # Always on the fringe of other clusters.
 
 # Fit k-means to data
-kmeans = KMeans(n_clusters = len(colors),
-                verbose = 1)
+kmeans = KMeans(n_clusters = len(colors))
 
 kmeans.fit(np.transpose(pca_data))
 
@@ -130,25 +130,26 @@ plt.title('PCA Features - KMeans')
 plt.show()
 
 
-# Fit OPTICS to data
-optics = OPTICS(min_samples=10,
-                min_cluster_size = 100,
-                xi = 0.005)
+# Fit GMM to data
+gmm = GaussianMixture(n_components = 4, 
+                      covariance_type = 'full')
 
-optics.fit(np.transpose(pca_data))
+# Fit the GMM model to the pca_data
 
-labels_optics = optics.labels_
+gmm.fit(np.transpose(pca_data))
+
+labels_gmm = gmm.predict(np.transpose(pca_data))
 
 # Plot first two PCA features
 plt.figure()
 for count, color in enumerate(colors):
-    plt.scatter(pca_data[0,np.argwhere(labels_optics==count)],
-                pca_data[1,np.argwhere(labels_optics==count)],
+    plt.scatter(pca_data[0,np.argwhere(labels_gmm == count)],
+                pca_data[1,np.argwhere(labels_gmm == count)],
                 c = color,
                 marker = '.',
                 alpha = 0.5)
 plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
 plt.xlabel('PC 1')
 plt.ylabel('PC 2')
-plt.title('PCA Features - OPTICS')
+plt.title('PCA Features - GMM')
 plt.show()
