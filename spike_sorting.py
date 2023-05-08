@@ -3,8 +3,12 @@ import seaborn as sns
 import numpy as np
 import scipy
 import pandas as pd
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
 
 # Import PCA feature data from MAT file
 data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLA_GR.mat')
@@ -142,7 +146,7 @@ plt.ylabel('PC 2')
 plt.title('PCA Features - KMeans')
 plt.show()
 
-
+# Try some clustering
 # Fit GMM to data
 gmm = GaussianMixture(n_components = 4, 
                       covariance_type = 'full')
@@ -180,3 +184,36 @@ plt.xlabel('Wavelet 1')
 plt.ylabel('Wavelet 2')
 plt.title('Wavelet Features - GMM')
 plt.show()
+
+
+
+
+
+# Try some classification
+# Splitting the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(pca_data.T,
+                                                    label_data, 
+                                                    test_size = 0.2,
+                                                    random_state = 42)
+
+# Decision Tree Classifier
+dt_classifier = DecisionTreeClassifier()
+dt_classifier.fit(X_train, y_train)
+dt_accuracy = dt_classifier.score(X_test, y_test)
+print("Decision Tree Classifier Accuracy:", dt_accuracy)
+
+# Random Forest Classifier
+rf_classifier = RandomForestClassifier()
+rf_classifier.fit(X_train, y_train)
+rf_accuracy = rf_classifier.score(X_test, y_test)
+print("Random Forest Classifier Accuracy:", rf_accuracy)
+
+# Gaussian Naive Bayes Classifier
+gnb_classifier = GaussianNB()
+gnb_classifier.fit(X_train, y_train)
+gnb_accuracy = gnb_classifier.score(X_test, y_test)
+print("Gaussian Naive Bayes Classifier Accuracy:", gnb_accuracy)
+
+
+
+
