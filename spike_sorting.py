@@ -219,7 +219,7 @@ classifiers = [
     QuadraticDiscriminantAnalysis(),
     KNeighborsClassifier()
     ]
-
+high_score = 0
 for name, clf in zip(classifier_names, classifiers):
     clf = make_pipeline(
         StandardScaler(), 
@@ -233,9 +233,16 @@ for name, clf in zip(classifier_names, classifiers):
         X_test,
         y_test
         )
+    if score > high_score:
+        high_score = score
+        high_clf = name
     print(name + " Accuracy: ", "{:.3f}".format(score))
     ConfusionMatrixDisplay.from_estimator(
         clf,
         X_test,
         y_test, 
         cmap = plt.cm.Blues)
+
+print(high_clf + " had the highest accuracy at", "{:.3f}".format(high_score))
+
+
