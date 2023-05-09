@@ -9,6 +9,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import ConfusionMatrixDisplay
 
 # Import PCA feature data from MAT file
 data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLA_GR.mat')
@@ -196,24 +202,40 @@ X_train, X_test, y_train, y_test = train_test_split(pca_data.T,
                                                     test_size = 0.2,
                                                     random_state = 42)
 
-# Decision Tree Classifier
-dt_classifier = DecisionTreeClassifier()
-dt_classifier.fit(X_train, y_train)
-dt_accuracy = dt_classifier.score(X_test, y_test)
-print("Decision Tree Classifier Accuracy:", dt_accuracy)
+classifier_names = [
+    "Decision Tree",
+    "Random Forest",
+    "Naive Bayes",
+    "Support Vector Machine",
+    "Quadratic Discriminant Analysis",
+    "K Nearest Neighbors"
+    ]
 
-# Random Forest Classifier
-rf_classifier = RandomForestClassifier()
-rf_classifier.fit(X_train, y_train)
-rf_accuracy = rf_classifier.score(X_test, y_test)
-print("Random Forest Classifier Accuracy:", rf_accuracy)
+classifiers = [
+    DecisionTreeClassifier(),
+    RandomForestClassifier(),
+    GaussianNB(),
+    SVC(),
+    QuadraticDiscriminantAnalysis(),
+    KNeighborsClassifier()
+    ]
 
-# Gaussian Naive Bayes Classifier
-gnb_classifier = GaussianNB()
-gnb_classifier.fit(X_train, y_train)
-gnb_accuracy = gnb_classifier.score(X_test, y_test)
-print("Gaussian Naive Bayes Classifier Accuracy:", gnb_accuracy)
-
-
-
-
+for name, clf in zip(classifier_names, classifiers):
+    clf = make_pipeline(
+        StandardScaler(), 
+        clf
+        )
+    clf.fit(
+        X_train, 
+        y_train
+        )
+    score = clf.score(
+        X_test,
+        y_test
+        )
+    print(name + " Accuracy: ", "{:.3f}".format(score))
+    ConfusionMatrixDisplay.from_estimator(
+        clf,
+        X_test,
+        y_test, 
+        cmap = plt.cm.Blues)
