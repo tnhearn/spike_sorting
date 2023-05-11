@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import scipy
-import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import train_test_split
@@ -24,6 +22,7 @@ label_data = label_data[0,:].astype('int')
 
 for label in np.unique(label_data):
     print('{} spikes in group {}'.format(np.count_nonzero(label_data == label), label))
+print()
 
 plt.figure()
 plt.hist(label_data)
@@ -40,12 +39,12 @@ spike_time = np.linspace(0,
                          num = spike_data.shape[0])
 
 # Plot spikes
-plt.figure(figsize=(20,10))
+plt.figure(figsize = (20, 10))
 colors = ['blue', 'green', 'red', 'black']
 for count, label in enumerate(label_data):
-    plt.subplot(2, 2, label+1)
+    plt.subplot(2, 2, label + 1)
     plt.plot(spike_time,
-             spike_data[:,count],
+             spike_data[:, count],
              color = colors[label_data[count]])
     plt.xlabel('Sample')
     plt.ylabel('Amplitude (uV)')
@@ -84,8 +83,6 @@ for i in range(len(integers)):
         # Add the pair of integers to the list
         pairs.append((integers[i], integers[j]))
 
-# Print the list of pairs of integers
-print(pairs)
 
 for pair in pairs:
     plt.figure()
@@ -101,56 +98,57 @@ data = scipy.io.loadmat('Real_Human_UCLA_Data/UCLA_Wavelet_Features.mat')
 wavelet_data = data['X']
 wavelet_data = np.transpose(wavelet_data)
 
+# Create plotting function for labelled data
+def plot_labelled_data(data, labels, xlabel, ylabel, title):
+    plt.figure()
+    for count, color in enumerate(colors):
+        plt.scatter(data[0,np.argwhere(labels==count)],
+                    data[1,np.argwhere(labels==count)],
+                    c = color,
+                    marker = '.',
+                    alpha = 0.5)
+    plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.show()
+
 # Plot first two Wavelet features
-plt.figure()
-for count, color in enumerate(colors):
-    plt.scatter(wavelet_data[0,np.argwhere(label_data==count)],
-                wavelet_data[1,np.argwhere(label_data==count)],
-                c = color,
-                marker = '.',
-                alpha = 0.5)
-plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
-plt.xlabel('Wavelet 1')
-plt.ylabel('Wavelet 2')
-plt.title('Wavelet Features')
-plt.show()
+plot_labelled_data(
+    wavelet_data,
+    label_data,
+    'Wavelet 1', 
+    'Wavelet 2', 
+    'Wavelet Features')
 
 # "Spike 4" (value = 3 in labels) is likely noise. 
 # Always on the fringe of other clusters.
 
 # Fit k-means to data
-kmeans = KMeans(n_clusters = len(colors))
+kmeans = KMeans(n_clusters = len(colors), n_init = 10)
 
 kmeans.fit(np.transpose(pca_data))
 
 labels_kmeans = kmeans.predict(np.transpose(pca_data))
 
-# Plot first two PCA features
-plt.figure()
-for count, color in enumerate(colors):
-    plt.scatter(pca_data[0,np.argwhere(labels_kmeans==count)],
-                pca_data[1,np.argwhere(labels_kmeans==count)],
-                c = color,
-                marker = '.',
-                alpha = 0.5)
-plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
-plt.xlabel('PC 1')
-plt.ylabel('PC 2')
-plt.title('PCA Features - KMeans')
-plt.show()
 
-plt.figure()
-for count, color in enumerate(colors):
-    plt.scatter(wavelet_data[0,np.argwhere(labels_kmeans == count)],
-                wavelet_data[1,np.argwhere(labels_kmeans == count)],
-                c = color,
-                marker = '.',
-                alpha = 0.5)
-plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
-plt.xlabel('PC 1')
-plt.ylabel('PC 2')
-plt.title('PCA Features - KMeans')
-plt.show()
+
+# Plot first two PCA features
+plot_labelled_data(
+    pca_data,
+    labels_kmeans, 
+    'PC 1',
+    'PC 2', 
+    'PCA Features - KMeans')
+
+# Plot first two Wavelet features
+plot_labelled_data(
+    wavelet_data, 
+    labels_kmeans, 
+    'Wavelet 1',
+    'Wavelet 2', 
+    'Wavelet Features - KMeans')
+
 
 # Try some clustering
 # Fit GMM to data
@@ -164,43 +162,29 @@ gmm.fit(np.transpose(pca_data))
 labels_gmm = gmm.predict(np.transpose(pca_data))
 
 # Plot first two PCA features
-plt.figure()
-for count, color in enumerate(colors):
-    plt.scatter(pca_data[0,np.argwhere(labels_gmm == count)],
-                pca_data[1,np.argwhere(labels_gmm == count)],
-                c = color,
-                marker = '.',
-                alpha = 0.5)
-plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
-plt.xlabel('PC 1')
-plt.ylabel('PC 2')
-plt.title('PCA Features - GMM')
-plt.show()
+plot_labelled_data(
+    pca_data,
+    labels_gmm, 
+    'PC 1',
+    'PC 2', 
+    'PCA Features - KMeans')
 
-# Plot first two PCA features
-plt.figure()
-for count, color in enumerate(colors):
-    plt.scatter(wavelet_data[0,np.argwhere(labels_gmm == count)],
-                wavelet_data[1,np.argwhere(labels_gmm == count)],
-                c = color,
-                marker = '.',
-                alpha = 0.5)
-plt.legend(['Spike 1', 'Spike 2', 'Spike 3', 'Spike 4'])
-plt.xlabel('Wavelet 1')
-plt.ylabel('Wavelet 2')
-plt.title('Wavelet Features - GMM')
-plt.show()
-
-
-
+# Plot first two Wavelet features
+plot_labelled_data(
+    wavelet_data, 
+    labels_gmm, 
+    'Wavelet 1',
+    'Wavelet 2', 
+    'Wavelet Features - KMeans')
 
 
 # Try some classification
 # Splitting the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(pca_data.T,
-                                                    label_data, 
-                                                    test_size = 0.2,
-                                                    random_state = 42)
+X_train, X_test, y_train, y_test = train_test_split(
+    pca_data.T,
+    label_data, 
+    test_size = 0.2,
+    random_state = 42)
 
 classifier_names = [
     "Decision Tree",
@@ -208,8 +192,7 @@ classifier_names = [
     "Naive Bayes",
     "Support Vector Machine",
     "Quadratic Discriminant Analysis",
-    "K Nearest Neighbors"
-    ]
+    "K Nearest Neighbors"]
 
 classifiers = [
     DecisionTreeClassifier(),
@@ -217,32 +200,35 @@ classifiers = [
     GaussianNB(),
     SVC(),
     QuadraticDiscriminantAnalysis(),
-    KNeighborsClassifier()
-    ]
+    KNeighborsClassifier()]
+
 high_score = 0
 for name, clf in zip(classifier_names, classifiers):
     clf = make_pipeline(
         StandardScaler(), 
-        clf
-        )
+        clf)
     clf.fit(
         X_train, 
-        y_train
-        )
+        y_train)
     score = clf.score(
         X_test,
-        y_test
-        )
+        y_test)
     if score > high_score:
         high_score = score
         high_clf = name
     print(name + " Accuracy: ", "{:.3f}".format(score))
+    plt.figure()
     ConfusionMatrixDisplay.from_estimator(
         clf,
         X_test,
         y_test, 
+        labels = ["PC 1", "PC 2"],
         cmap = plt.cm.Blues)
+    plt.title(name)
+   
+    
 
 print(high_clf + " had the highest accuracy at", "{:.3f}".format(high_score))
+
 
 
